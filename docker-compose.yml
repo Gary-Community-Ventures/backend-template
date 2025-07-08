@@ -1,0 +1,33 @@
+services:
+  backend:
+    build: .
+    command: flask run --host=0.0.0.0 --debug
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres
+    environment:
+      - DATABASE_URL=postgresql://dev:dev@postgres/csp_app
+      - FLASK_ENV=development
+      - DEBUG=True
+    volumes:
+      - .:/app
+      # If you're on a non-Linux system (e.g., macOS, Windows with WSL2)
+      # and experience performance issues with file watching,
+      # you might need to add ':delegated' or ':cached' at the end:
+      # - .:/app:delegated
+      # - .:/app:cached
+
+  postgres:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=csp_app
+      - POSTGRES_USER=dev
+      - POSTGRES_PASSWORD=dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
