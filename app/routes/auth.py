@@ -1,61 +1,66 @@
 from flask import Blueprint, jsonify, g
 
-from ..auth.decorators import clerk_required
-from ..auth.helpers import get_current_user
+from ..auth.decorators import auth_required, auth_optional
+from ..auth.helpers import get_current_user, is_authenticated
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 
 @auth_bp.route("/protected")
-@clerk_required
+@auth_required
 def protected_route():
-    """Protected route using the decorator"""
-    return jsonify(
-        {
-            "message": f"Welcome, user {g.clerk_user_id}!",
-            "user_id": g.clerk_user_id,
-            "session_id": g.clerk_session_id,
-        }
-    )
+    """Protected route requiring authentication"""
+    return jsonify({
+        "message": f"Welcome, user {g.auth_user_id}!",
+        "user_id": g.auth_user_id,
+        "session_id": g.auth_session_id,
+    })
 
 
 @auth_bp.route("/user")
+@auth_optional
 def user_info():
-    """Route that works with or without auth"""
-    user = get_current_user()
-    if user:
-        return jsonify(
-            {
-                "authenticated": True,
-                "user_id": user["user_id"],
-                "email": (
-                    user["user"].email_addresses[0].email_address
-                    if user["user"].email_addresses
-                    else None
-                ),
-            }
-        )
+    """Route that works with or without authentication"""
+    if is_authenticated():
+        # You can access the full request state to get user details
+        user_data = g.auth_request_state.payload
+        return jsonify({
+            "authenticated": True,
+            "user_id": g.auth_user_id,
+            "session_id": g.auth_session_id,
+            "token_data": user_data  # This contains the full JWT payload
+        })
     else:
         return jsonify({"authenticated": False})
 
 
 @auth_bp.route("/me")
-@clerk_required
+@auth_required
 def get_user_details():
-    """Get detailed user information"""
-    # Access full user object from request state
-    user = g.clerk_request_state.user
-    session = g.clerk_request_state.session
+    """Get detailed user information from the token payload"""
+    # Access the full token payload
+    token_payload = g.auth_request_state.payload
+    
+    return jsonify({
+        "token_payload": token_payload,
+        "user_id": g.auth_user_id,
+        "session_id": g.auth_session_id,
+        "issued_at": g.auth_issued_at,
+        "expires_at": g.auth_expires_at,
+        "issuer": g.auth_issuer
+    })
 
-    return jsonify(
-        {
-            "user_id": user.id,
-            "email": (
-                user.email_addresses[0].email_address if user.email_addresses else None
-            ),
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "session_id": session.id,
-            "last_active": session.last_active_at,
-        }
-    )
+
+@auth_bp.route("/status")
+def auth_status():
+    """Check authentication status using helper function"""
+    user = get_current_user()
+    
+    if user:
+        return jsonify({
+            "authenticated": True,
+            "user_id": user["user_id"],
+            "session_id": user["session_id"]
+        })
+    else:
+        return jsonify({"authenticated": False})

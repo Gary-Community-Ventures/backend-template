@@ -3,10 +3,17 @@
 This repo is a a template for a Flask backend with a Postgres database. 
 It also uses Clerk for authentication and Sentry for error tracking.
 
-To get started make a copy of `.env.example` to a `.env` and populate any keys that need to be set.
+To get started make a copy of `.env.example` to a `.env` file and populate any keys/values that need to be set.
 Then run `docker-compose up --build -d` and you should be up and running. 
 
 Any changes you make to python files should be hot reloaded for faster development. 
+
+## Examples
+
+Examples of routes can be found under the `app/routes` path. In `app/routes/main.py` you will find
+standard non-authenticated routes that can be used for testing. In `app/routes/auth.py` you will find examples
+of authenticated routes with used the auth decorators. It is easiest to test these if you have a working
+Clerk frontend.
 
 
 ## Useful Commands
