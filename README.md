@@ -3,6 +3,11 @@
 This repo is a a template for a Flask backend with a Postgres database. 
 It also uses Clerk for authentication and Sentry for error tracking.
 
+To get started make a copy of `.env.example` to a `.env` and populate any keys that need to be set.
+Then run `docker-compose up --build -d` and you should be up and running. 
+
+Any changes you make to python files should be hot reloaded for faster development. 
+
 
 ## Useful Commands
 
