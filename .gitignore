@@ -27,3 +27,6 @@ venv
 
 # Environment files
 .env
+
+# Visual Studio Code
+.vscode

@@ -1,81 +1,86 @@
+# Backend Template
 
-# Useful Commands
+This repo is a a template for a Flask backend with a Postgres database. 
+It also uses Clerk for authentication and Sentry for error tracking.
 
-## General
 
-### Build Ad Start All
+## Useful Commands
+
+### General
+
+#### Build Ad Start All
 ```
 docker-compose up --build -d
 ```
 
-### Start Services (If already built)
+#### Start Services (If already built)
 ```
 docker-compose up -d
 ```
 
-### View Running Services
+#### View Running Services
 ```
 docker-compose ps
 ```
 
-### View Logs of All Services
+#### View Logs of All Services
 ```
 docker-compose logs -f
 ```
 
-### View Logs of Specific Service
+#### View Logs of Specific Service
 ```
 docker-compose logs -f backend
 ```
 
-### Stop ad Remove All Services
+#### Stop ad Remove All Services
 ```
 docker-compose down
 # To remove volumes (e.g., to reset database data):
 # docker-compose down --volumes
 ```
 
-## Flask
+### Flask
 
-### Flask Shell
+#### Flask Shell
 ```
 docker-compose exec backend flask shell
 ```
 
-## Migrations
+### Migrations
 
-### Generate New Database Migration
+#### Generate New Database Migration
 ```
 docker-compose exec backend flask db migrate -m "Description of your changes"
 ```
 
-### Apply All Pending Migrations
+#### Apply All Pending Migrations
 ```
 docker-compose exec backend flask db upgrade
 ```
 
-### Database Migration Status
+#### Database Migration Status
 ```
 docker-compose exec backend flask db history
 docker-compose exec backend flask db current
 ```
 
-### Revert Last Database Migration
+#### Revert Last Database Migration
 ```
 docker-compose exec backend flask db downgrade
 ```
 
-## Containers
+### Containers
 ```
 docker-compose exec backend <command_to_run_inside_container>
 ```
 
-### Bash Shell Inside Container
+#### Bash Shell Inside Container
 ```
 docker-compose exec backend /bin/bash
 ```
 
-### Clean Up Dangling Images/Volumes
+#### Clean Up Dangling Images/Volumes
 ```
 docker system prune -a --volumes
 ```
