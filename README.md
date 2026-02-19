@@ -1,12 +1,27 @@
 # Backend Template
 
-This repo is a a template for a Flask backend with a Postgres database. 
+This repo is a template for a Flask backend with Supabase as the database.
 It also uses Clerk for authentication and Sentry for error tracking.
 
-To get started make a copy of `.env.example` to a `.env` file and populate any keys/values that need to be set.
-Then run `docker-compose up --build -d` and you should be up and running. 
+## Setup
 
-Any changes you make to python files should be hot reloaded for faster development. 
+1. Copy `.env.example` to `.env` and populate the required values:
+   - `SUPABASE_URL` - Your Supabase project URL
+   - `SUPABASE_KEY` - Your Supabase anon/public key
+   - `CLERK_SECRET_KEY` - Your Clerk secret key
+   - `SENTRY_DSN` - Your Sentry DSN (optional)
+
+2. Create a virtual environment and install dependencies:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   make install
+   ```
+
+3. Run the development server:
+   ```bash
+   make run
+   ```
 
 ## Examples
 
@@ -15,84 +30,58 @@ standard non-authenticated routes that can be used for testing. In `app/routes/a
 of authenticated routes with used the auth decorators. It is easiest to test these if you have a working
 Clerk frontend.
 
+## Supabase Usage
 
-## Useful Commands
+The Supabase client is initialized in `app/__init__.py` and accessible via `current_app.supabase_client`.
 
-### General
+### Defining Tables
 
-#### Build Ad Start All
-```
-docker-compose up --build -d
-```
+Define your tables in `app/supabase/tables.py`:
 
-#### Start Services (If already built)
-```
-docker-compose up -d
-```
+```python
+from app.supabase.columns import Column, datetime_column
+from app.supabase.tables import Table
 
-#### View Running Services
-```
-docker-compose ps
-```
+class User(Table):
+    TABLE_NAME = "user"
 
-#### View Logs of All Services
-```
-docker-compose logs -f
+    CLERK_ID = Column("clerk_id")
+    EMAIL = Column("email")
+    NAME = Column("name")
+    CREATED_AT = Column("created_at", datetime_column)
 ```
 
-#### View Logs of Specific Service
-```
-docker-compose logs -f backend
+### Querying Data
+
+```python
+from flask import current_app
+from app.supabase import cols, unwrap_or_abort
+from app.supabase.tables import User
+
+# Select all users
+result = User.query().select("*").execute()
+users = unwrap_or_abort(result)
+
+# Select specific columns
+result = User.query().select(cols(User.EMAIL, User.NAME)).execute()
+
+# Select by ID
+result = User.select_by_id(cols(User.EMAIL, User.NAME), user_id).execute()
+user = unwrap_or_abort(result)
+
+# Filter and query
+result = User.query().select("*").eq(User.EMAIL, "test@example.com").execute()
 ```
 
-#### Stop ad Remove All Services
-```
-docker-compose down
-# To remove volumes (e.g., to reset database data):
-# docker-compose down --volumes
-```
+## Makefile Commands
 
-### Flask
-
-#### Flask Shell
-```
-docker-compose exec backend flask shell
-```
-
-### Migrations
-
-#### Generate New Database Migration
-```
-docker-compose exec backend flask db migrate -m "Description of your changes"
-```
-
-#### Apply All Pending Migrations
-```
-docker-compose exec backend flask db upgrade
-```
-
-#### Database Migration Status
-```
-docker-compose exec backend flask db history
-docker-compose exec backend flask db current
-```
-
-#### Revert Last Database Migration
-```
-docker-compose exec backend flask db downgrade
-```
-
-### Containers
-```
-docker-compose exec backend <command_to_run_inside_container>
-```
-
-#### Bash Shell Inside Container
-```
-docker-compose exec backend /bin/bash
-```
-
-#### Clean Up Dangling Images/Volumes
-```
-docker system prune -a --volumes
-```
+| Command | Description |
+|---------|-------------|
+| `make install` | Install dependencies |
+| `make run` | Run development server |
+| `make prod` | Run with Gunicorn |
+| `make format` | Format code with Black |
+| `make lint` | Lint code with Flake8 |
+| `make test` | Run tests |
+| `make test-cov` | Run tests with coverage |
+| `make clean` | Remove cached files |
