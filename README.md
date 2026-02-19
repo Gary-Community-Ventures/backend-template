@@ -15,12 +15,12 @@ It also uses Clerk for authentication and Sentry for error tracking.
    ```bash
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
-   pip install -r requirements.txt
+   make install
    ```
 
 3. Run the development server:
    ```bash
-   python run.py
+   make run
    ```
 
 ## Examples
@@ -73,40 +73,15 @@ user = unwrap_or_abort(result)
 result = User.query().select("*").eq(User.EMAIL, "test@example.com").execute()
 ```
 
-## Useful Commands
+## Makefile Commands
 
-### Development
-
-#### Run Development Server
-```bash
-python run.py
-```
-
-#### Run with Gunicorn (Production-like)
-```bash
-gunicorn wsgi:app
-```
-
-### Code Quality
-
-#### Format Code
-```bash
-black app/
-```
-
-#### Lint Code
-```bash
-flake8 app/
-```
-
-### Testing
-
-#### Run Tests
-```bash
-pytest
-```
-
-#### Run Tests with Coverage
-```bash
-pytest --cov=app
-```
+| Command | Description |
+|---------|-------------|
+| `make install` | Install dependencies |
+| `make run` | Run development server |
+| `make prod` | Run with Gunicorn |
+| `make format` | Format code with Black |
+| `make lint` | Lint code with Flake8 |
+| `make test` | Run tests |
+| `make test-cov` | Run tests with coverage |
+| `make clean` | Remove cached files |
