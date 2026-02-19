@@ -4,15 +4,12 @@ from dotenv import load_dotenv
 
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
-from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
 from clerk_backend_api import Clerk
+from supabase import create_client
 
 # Import extensions from the extensions module
-from .extensions import db, migrate, cors
-
-# Import models to ensure they are registered with SQLAlchemy
-from . import models 
+from .extensions import cors
 
 
 def create_app(config_class=None):
@@ -44,7 +41,6 @@ def create_app(config_class=None):
             dsn=sentry_dsn,
             integrations=[
                 FlaskIntegration(),
-                SqlalchemyIntegration(),
             ],
             traces_sample_rate=app.config.get("SENTRY_TRACES_SAMPLE_RATE", 1.0),
             profiles_sample_rate=app.config.get("SENTRY_PROFILES_SAMPLE_RATE", 1.0),
@@ -58,7 +54,7 @@ def create_app(config_class=None):
 
     # --- Clerk SDK Initialization ---
     clerk_secret_key = app.config.get("CLERK_SECRET_KEY")
-    
+
     if not clerk_secret_key:
         print("WARNING: CLERK_SECRET_KEY not found. Clerk authentication will be disabled.")
         app.clerk_client = None
@@ -66,9 +62,18 @@ def create_app(config_class=None):
         app.clerk_client = Clerk(bearer_auth=clerk_secret_key)
         print("Clerk SDK initialized successfully.")
 
+    # --- Supabase Client Initialization ---
+    supabase_url = app.config.get("SUPABASE_URL")
+    supabase_key = app.config.get("SUPABASE_KEY")
+
+    if not supabase_url or not supabase_key:
+        print("WARNING: SUPABASE_URL or SUPABASE_KEY not found. Supabase client will not be initialized.")
+        app.supabase_client = None
+    else:
+        app.supabase_client = create_client(supabase_url, supabase_key)
+        print("Supabase client initialized successfully.")
+
     # --- Initialize Flask Extensions (after app config) ---
-    db.init_app(app)
-    migrate.init_app(app, db)
     cors.init_app(app)
 
     # --- Register Blueprints ---

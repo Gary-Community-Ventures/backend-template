@@ -1,12 +1,27 @@
 # Backend Template
 
-This repo is a a template for a Flask backend with a Postgres database. 
+This repo is a template for a Flask backend with Supabase as the database.
 It also uses Clerk for authentication and Sentry for error tracking.
 
-To get started make a copy of `.env.example` to a `.env` file and populate any keys/values that need to be set.
-Then run `docker-compose up --build -d` and you should be up and running. 
+## Setup
 
-Any changes you make to python files should be hot reloaded for faster development. 
+1. Copy `.env.example` to `.env` and populate the required values:
+   - `SUPABASE_URL` - Your Supabase project URL
+   - `SUPABASE_KEY` - Your Supabase anon/public key
+   - `CLERK_SECRET_KEY` - Your Clerk secret key
+   - `SENTRY_DSN` - Your Sentry DSN (optional)
+
+2. Create a virtual environment and install dependencies:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+
+3. Run the development server:
+   ```bash
+   python run.py
+   ```
 
 ## Examples
 
@@ -15,84 +30,83 @@ standard non-authenticated routes that can be used for testing. In `app/routes/a
 of authenticated routes with used the auth decorators. It is easiest to test these if you have a working
 Clerk frontend.
 
+## Supabase Usage
+
+The Supabase client is initialized in `app/__init__.py` and accessible via `current_app.supabase_client`.
+
+### Defining Tables
+
+Define your tables in `app/supabase/tables.py`:
+
+```python
+from app.supabase.columns import Column, datetime_column
+from app.supabase.tables import Table
+
+class User(Table):
+    TABLE_NAME = "user"
+
+    CLERK_ID = Column("clerk_id")
+    EMAIL = Column("email")
+    NAME = Column("name")
+    CREATED_AT = Column("created_at", datetime_column)
+```
+
+### Querying Data
+
+```python
+from flask import current_app
+from app.supabase import cols, unwrap_or_abort
+from app.supabase.tables import User
+
+# Select all users
+result = User.query().select("*").execute()
+users = unwrap_or_abort(result)
+
+# Select specific columns
+result = User.query().select(cols(User.EMAIL, User.NAME)).execute()
+
+# Select by ID
+result = User.select_by_id(cols(User.EMAIL, User.NAME), user_id).execute()
+user = unwrap_or_abort(result)
+
+# Filter and query
+result = User.query().select("*").eq(User.EMAIL, "test@example.com").execute()
+```
 
 ## Useful Commands
 
-### General
+### Development
 
-#### Build Ad Start All
-```
-docker-compose up --build -d
-```
-
-#### Start Services (If already built)
-```
-docker-compose up -d
+#### Run Development Server
+```bash
+python run.py
 ```
 
-#### View Running Services
-```
-docker-compose ps
-```
-
-#### View Logs of All Services
-```
-docker-compose logs -f
+#### Run with Gunicorn (Production-like)
+```bash
+gunicorn wsgi:app
 ```
 
-#### View Logs of Specific Service
-```
-docker-compose logs -f backend
+### Code Quality
+
+#### Format Code
+```bash
+black app/
 ```
 
-#### Stop ad Remove All Services
-```
-docker-compose down
-# To remove volumes (e.g., to reset database data):
-# docker-compose down --volumes
+#### Lint Code
+```bash
+flake8 app/
 ```
 
-### Flask
+### Testing
 
-#### Flask Shell
-```
-docker-compose exec backend flask shell
-```
-
-### Migrations
-
-#### Generate New Database Migration
-```
-docker-compose exec backend flask db migrate -m "Description of your changes"
+#### Run Tests
+```bash
+pytest
 ```
 
-#### Apply All Pending Migrations
-```
-docker-compose exec backend flask db upgrade
-```
-
-#### Database Migration Status
-```
-docker-compose exec backend flask db history
-docker-compose exec backend flask db current
-```
-
-#### Revert Last Database Migration
-```
-docker-compose exec backend flask db downgrade
-```
-
-### Containers
-```
-docker-compose exec backend <command_to_run_inside_container>
-```
-
-#### Bash Shell Inside Container
-```
-docker-compose exec backend /bin/bash
-```
-
-#### Clean Up Dangling Images/Volumes
-```
-docker system prune -a --volumes
+#### Run Tests with Coverage
+```bash
+pytest --cov=app
 ```
